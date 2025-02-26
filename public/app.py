@@ -4,13 +4,14 @@ from bs4 import BeautifulSoup
 from urllib.parse import urlparse
 from flask import Flask, request, jsonify
 from flask_cors import CORS
+import openai
 
 app = Flask(__name__)
-CORS(app, resources={r"/*": {"origins": "http://127.0.0.1:3000"}})
+CORS(app, resources={r"/*": {"origins": "localhost:3000"}})
 
-# Replace 'your_deepseek_api_key' with your actual DeepSeek API key
-DEEPSEEK_API_KEY = 'sk-87bbe9b28cbb42bd911a33b9b8b10f11'
-DEEPSEEK_API_URL = 'https://api.deepseek.ai/generate'  # Replace with the actual endpoint
+# Replace 'your_openai_api_key' with your actual OpenAI API key
+OPENAI_API_KEY = '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'
+openai.api_key = OPENAI_API_KEY
 
 def extract_images(url):
     """Extract images from a given webpage URL using BeautifulSoup."""
@@ -39,24 +40,18 @@ def summarize():
         url = data.get("url", "")
         tone = data.get("tone", "neutral")
 
-        # Step 1: Use DeepSeek AI API to generate a summary
-        payload = {
-            'url': url,
-            'tone': tone,
-        }
+        # Step 1: Use OpenAI's GPT-4 Turbo to generate a summary
+        prompt = f"Summarize the following webpage content in a {tone} tone:\n{url}"
+        
+        response = openai.ChatCompletion.create(
+            model="gpt-4-turbo",  # Use GPT-4 turbo model
+            messages=[
+                {"role": "system", "content": "You are a helpful assistant."},
+                {"role": "user", "content": prompt}
+            ]
+        )
 
-        headers = {
-            'Authorization': f'Bearer {DEEPSEEK_API_KEY}',
-            'Content-Type': 'application/json'
-        }
-
-        response = requests.post(DEEPSEEK_API_URL, json=payload, headers=headers)
-        response_data = response.json()
-
-        if response.status_code != 200:
-            raise Exception('Failed to generate content from DeepSeek AI')
-
-        summary_text = response_data.get("summary", "No summary generated.")
+        summary_text = response['choices'][0]['message']['content']
 
         # Step 2: Extract images from the URL
         extracted_images = extract_images(url)
