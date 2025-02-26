@@ -10,7 +10,7 @@ app = Flask(__name__)
 CORS(app, resources={r"/*": {"origins": "localhost:3000"}})
 
 # Replace 'your_openai_api_key' with your actual OpenAI API key
-OPENAI_API_KEY = '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'
+OPENAI_API_KEY = 'key'
 openai.api_key = OPENAI_API_KEY
 
 def extract_images(url):
